@@ -1,0 +1,62 @@
+{
+    "name": "CRI",
+    "engine": {
+        "authorityRound": {
+            "params": {
+                "stepDuration": "5",
+                "validators" : {
+                    "list": [
+                        {% set authority_nodes_dict = salt["mine.get"]("*","parity_authority") %}
+                        {%for k in authority_nodes_dict.keys() |sort%}
+                            "{{ authority_nodes_dict[k][0] }}"
+                            {{ "," if not loop.last else "" }}
+                        {% endfor %}
+
+
+                    ]
+                }
+            }
+        }
+    },
+    "params": {
+        "gasLimitBoundDivisor": "0x400",
+        "maximumExtraDataSize": "0x20",
+        "minGasLimit": "0x1388",
+        "networkID" : "0x2323",
+        "eip155Transition": 0,
+        "validateChainIdTransition": 0,
+        "eip140Transition": 0,
+        "eip211Transition": 0,
+        "eip214Transition": 0,
+        "eip658Transition": 0,
+        "eip145Transition": 0
+    },
+    "genesis": {
+        "seal": {
+            "authorityRound": {
+                "step": "0x0",
+                "signature": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            }
+        },
+        "difficulty": "0x20000",
+        "gasLimit": "0x80000000"
+    },
+    "accounts": {
+        "0x0000000000000000000000000000000000000001": { "balance": "1", "builtin": { "name": "ecrecover", "pricing": { "linear": { "base": 3000, "word": 0 } } } },
+        "0x0000000000000000000000000000000000000002": { "balance": "1", "builtin": { "name": "sha256", "pricing": { "linear": { "base": 60, "word": 12 } } } },
+        "0x0000000000000000000000000000000000000003": { "balance": "1", "builtin": { "name": "ripemd160", "pricing": { "linear": { "base": 600, "word": 120 } } } },
+        "0x0000000000000000000000000000000000000004": { "balance": "1", "builtin": { "name": "identity", "pricing": { "linear": { "base": 15, "word": 3 } } } }
+        {% set user_node_addr = salt["mine.get"]("*","parity_user") %}
+        {% if user_node_addr is not none %}
+            {% if user_node_addr.keys()|length > 0  %}
+                
+                {% for k in user_node_addr.keys()|sort %}
+                
+                  {% for address in user_node_addr[k] %}
+                , "{{ address }}": { "balance": "10000000000000000000000" } 
+                  {% endfor %}
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+    }
+}

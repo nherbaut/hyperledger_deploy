@@ -1,0 +1,40 @@
+[parity]
+chain = "/etc/parity/chain-config.json"
+base_path = "/var/lib/parity"
+
+[misc]
+log_file = "/var/log/parity.log"
+logging = "miner=trace,own_tx=trace"
+
+[network]
+port = 30300
+nat = "extip:{{ salt["mine.get"](grains.id,"datapath_ip")[grains.id][0]}}"
+
+
+
+[rpc]
+interface = "{{ salt["mine.get"](grains.id,"datapath_ip")[grains.id][0]}}"
+port = 8540
+apis = ["web3", "eth", "net", "personal", "parity", "parity_set", "traces", "rpc", "parity_accounts"]
+[websockets]
+port = 8450
+#  JSON-RPC will be listening for connections on IP all.
+interface = "all"
+# Allows Cross-Origin Requests from domain 'all'.
+origins = ["all"]
+
+{% set authority_accounts = salt["mine.get"]("*","parity_authority") %}
+
+
+{% if authority_accounts is not none %}
+{% if grains.id in authority_accounts %}
+[account]
+password = ["/etc/parity/node.pwds"]
+[mining]
+engine_signer = "{{ authority_accounts[grains.id][0] }}"
+reseal_on_txs = "own" 
+{% endif %}
+{% endif %}
+
+
+
