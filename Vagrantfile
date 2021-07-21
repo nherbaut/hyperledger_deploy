@@ -4,6 +4,8 @@
 require "yaml"
 require "json"
 
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
+
 master_ip = "192.168.205.10"
 
 boxes = [
@@ -12,21 +14,36 @@ boxes = [
         :eth1 => master_ip,
         :mem => "2048",
         :cpu => "2",
-        :interface => "enp0s8"
+        :interface => "eth1"
     },
     {
         :name => "h1",
         :eth1 => "192.168.205.11",
         :mem => "2048",
         :cpu => "2",
-        :interface => "enp0s8"
+        :interface => "eth1"
     },
+
+    {
+      :name => "h2",
+      :eth1 => "192.168.205.12",
+      :mem => "2048",
+      :cpu => "2",
+      :interface => "eth1"
+  },
+  {
+      :name => "h3",
+      :eth1 => "192.168.205.13",
+      :mem => "2048",
+      :cpu => "2",
+      :interface => "eth1"
+  },
 
 ]
 
 Vagrant.configure(2) do |config|
 
-  config.vm.box = "ubuntu/bionic64"
+  config.vm.box = "generic/ubuntu2004"
 
 
   # Turn off shared folders
@@ -45,6 +62,11 @@ Vagrant.configure(2) do |config|
     config.vm.define opts[:name] do |config|
       config.vm.hostname = opts[:name]
 
+
+      config.vm.provider :libvirt do |v|
+        v.memory = opts[:mem]
+        v.cpus = opts[:cpu]
+        end
 
       config.vm.provider "virtualbox" do |v|
         v.customize ["modifyvm", :id, "--name", opts[:name]]
@@ -66,7 +88,7 @@ Vagrant.configure(2) do |config|
       puts minion_file
       if opts[:name] == "h0"
         config.vm.provision "shell", inline: <<-SHELL
-        #sh bootstrap-salt.sh -x python3 -F -M -i '#{opts[:name]}' -A '#{opts[:eth1]}' -J '#{master_file}'
+        sh bootstrap-salt.sh -x python3 -F -M -i '#{opts[:name]}' -A '#{opts[:eth1]}' -J '#{master_file}'
       SHELL
         
         
